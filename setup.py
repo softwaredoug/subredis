@@ -6,12 +6,12 @@ redis>=2.7.0"""
 
 setup(
     name="subredis",
-    version="0.0.2",
+    version="0.0.4",
     description="A Redis within your Redis",
     license="Apache",
     author="Doug Turnbull",
     author_email="softwaredoug@gmail.com",
-    py_modules=['subRedis'],
+    py_modules=['subredis'],
     install_requires=installReq,
     keywords=["redis", "database"],
     classifiers=[
