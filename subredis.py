@@ -84,6 +84,7 @@ class SubRedisMeta(type):
         # flushall TODO  is possible?
         # flushdb implemented below
         # from_url not supported for subredi
+        unsupportedOperation("from_url", dct)
         keyProxy("get", dct)
         keyProxy("getbit", dct)
         keyProxy("getrange", dct)
@@ -105,7 +106,7 @@ class SubRedisMeta(type):
         keyProxy("incrbyfloat", dct)
         # info TODO -- maybe info that this is a subredis?
         # keys -- custom implementation below
-        # lastsave() not supported in subredis
+        unsupportedOperation("lastsave", dct)
         keyProxy("lindex", dct)
         keyProxy("linsert", dct)
         keyProxy("llen", dct)
@@ -118,11 +119,11 @@ class SubRedisMeta(type):
         keyProxy("lset", dct)
         keyProxy("ltrim", dct)
         keyProxy("mget", dct)
-        # move not supported
+        unsupportedOperation("move", dct)
         # mset TODO -- needs custom impl
         # msetnx TODO -- needs custom impl
         # object TODO -- needs custom impl
-        # parse_response not supported
+        unsupportedOperation("parse_response", dct)
         keyProxy("persist", dct)
         keyProxy("pexpire", dct)
         keyProxy("pexpireat", dct)
@@ -131,7 +132,7 @@ class SubRedisMeta(type):
         keyProxy("pttl", dct)
         # publish TODO pubsub possible here?
         # pubsub  TODO pubsub possible here?
-        # randomkey not supported
+        unsupportedOperation("randomkey", dct)
         # register_script TODO
         # rename TODO needs custom impl
         # renamenx TODO needs custom impl
