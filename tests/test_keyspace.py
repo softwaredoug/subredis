@@ -1,5 +1,5 @@
 from redisspy import RedisSpy
-from subRedis import SubRedis
+from subredis import SubRedis
 
 
 def test_wrap_method():
