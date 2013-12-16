@@ -8,8 +8,14 @@ class NotSupportedError(NotImplementedError):
         self.operation = operation
         self.message = message
 
+    def __str__(self):
+        return "Unsupported Redis Operation: " + self.operation + \
+               "performed (" + self.message + ")"
+
 
 def keyProxyMethodFactory(redisMethod):
+    """Create a method for the subredis object where
+       we append a prefix to a key before calling redis"""
     def keyProxyMethod(subred, key, *args, **kwargs):
         """ Proxy redis for methods where the first arg is
             a redis key """
@@ -25,6 +31,8 @@ def keyProxy(methodName, dct):
 
 
 def unsupportedOperationMethodFactory(redisMethod, message):
+    """Create a method for the subredis object where
+       we thorw NotSupportedError on invocation"""
     def unsupportedMethod(subred, *args, **kwargs):
         raise NotSupportedError(redisMethod, message)
     return unsupportedMethod
@@ -35,8 +43,11 @@ def unsupportedOperation(methodName, dct, message=""):
 
 
 def directProxyMethodFactory(redisMethod):
+    """Create a method for the subredis object where
+       we just call redis normally, passing through everything""" 
     def directProxyMethod(subred, *args, **kwargs):
-        return subred.redis(*args, **kwargs)
+        proxiedRedisMethod = getattr(subred.redis, redisMethod)
+        return proxiedRedisMethod(args, **kwargs)
     return directProxyMethod
 
 
@@ -63,7 +74,7 @@ class SubRedisMeta(type):
         # dbsize TODO
         keyProxy("debug_object", dct)
         keyProxy("decr", dct)
-        keyProxy("delete", dct) #TODO only supports deleting single key
+        keyProxy("delete", dct)  # TODO only supports deleting single key
         unsupportedOperation("echo", dct)
         unsupportedOperation("eval", dct)
         unsupportedOperation("evalsha", dct)
