@@ -44,7 +44,7 @@ def unsupportedOperation(methodName, dct, message=""):
 
 def directProxyMethodFactory(redisMethod):
     """Create a method for the subredis object where
-       we just call redis normally, passing through everything""" 
+       we just call redis normally, passing through everything"""
     def directProxyMethod(subred, *args, **kwargs):
         proxiedRedisMethod = getattr(subred.redis, redisMethod)
         return proxiedRedisMethod(args, **kwargs)
@@ -58,16 +58,15 @@ def directProxy(methodName, dct):
 class SubRedisMeta(type):
 
     def __new__(cls, clsname, bases, dct):
-        print "meta called"
         keyProxy("hget", dct)
         keyProxy("append", dct)
         # bgrewriteaof not supported for subredis
         # bgsave not supported for subredis
         keyProxy("bitcount", dct)
-        # bitopt TODO
+        # bitopt custom impl below
         keyProxy("blpop", dct)
         keyProxy("brpop", dct)
-        # brpoplpush TODO
+        # brpoplpush custom impl below
         unsupportedOperation("client_kill", dct)
         unsupportedOperation("client_list", dct)
         unsupportedOperation("client_get", dct)
@@ -120,9 +119,9 @@ class SubRedisMeta(type):
         keyProxy("ltrim", dct)
         keyProxy("mget", dct)
         unsupportedOperation("move", dct)
-        # mset TODO -- needs custom impl
-        # msetnx TODO -- needs custom impl
-        # object TODO -- needs custom impl
+        # mset -- custom impl below
+        # msetnx -- custom impl below
+        # object -- custom impl below
         unsupportedOperation("parse_response", dct)
         keyProxy("persist", dct)
         keyProxy("pexpire", dct)
@@ -133,18 +132,18 @@ class SubRedisMeta(type):
         # publish TODO pubsub possible here?
         # pubsub  TODO pubsub possible here?
         unsupportedOperation("randomkey", dct)
-        # register_script TODO
-        # rename TODO needs custom impl
-        # renamenx TODO needs custom impl
+        # register_script UNSUPPORTED
+        # rename custom impl below
+        # renamenx custom impl below
         keyProxy("rpop", dct)
-        # rpoplpush TODO needs custom impl
+        # rpoplpush custom impl below
         keyProxy("rpush", dct)
         keyProxy("rpushx", dct)
         keyProxy("sadd", dct)
         keyProxy("scard", dct)
         # scripting not supported
-        # sdiff -- TODO
-        # sdiffstore TODO
+        # sdiff -- custom impl below
+        # sdiffstore -- custom impl below
         keyProxy("set", dct)
         # set_response_callback not supported
         keyProxy("setbit", dct)
@@ -153,18 +152,18 @@ class SubRedisMeta(type):
         keyProxy("setrange", dct)
         # shutdown not supported
         keyProxy("sinter", dct)
-        # TODO sinterstore
+        # sinterstore custom impl below
         keyProxy("sismember", dct)
         # slaveof not supported
         keyProxy("smembers", dct)
-        # TODO smove
+        # smove custom impl below
         # TODO sort -- last key needs to be implemented
         keyProxy("spop", dct)
         keyProxy("srandmember", dct)
         keyProxy("srem", dct)
         keyProxy("substr", dct)
         keyProxy("sunion", dct)
-        # TODO sunionstore
+        # sunionstore -- custom impl below
         directProxy("time", dct)
         # TODO transaction
         keyProxy("ttl", dct)
@@ -185,7 +184,7 @@ class SubRedisMeta(type):
         keyProxy("zrevrangebyscore", dct)
         keyProxy("zrevrank", dct)
         keyProxy("zscore", dct)
-        #TODO zunionstore
+        #zunionstore -- custom impl below
         return type.__new__(cls, clsname, bases, dct)
 
 
@@ -205,34 +204,106 @@ class SubRedis(object):
     def flushdb(self):
         """ Should only flush stuff beginning with prefix?"""
         allKeys = self.redis.keys(self.appendKeys("*"))
+        # for some reason deleteing with a list of keys isn't working
+        p = self.redis.pipeline()
         for key in allKeys:
-            self.redis.delete(key)
+            p.delete(key)
+        p.execute()
 
     def keys(self, pattern="*"):
         """ Only run pattern matching on my values """
         lenOfPrefix = len(self.appendKeys(""))
-        return [key[lenOfPrefix:] for key in self.redis.keys(self.appendKeys(pattern))]
+        return [key[lenOfPrefix:] for key in
+                self.redis.keys(self.appendKeys(pattern))]
 
-    def rename(srcKey, destKey):
-        raise NotImplementedError()
+    def bitop(self, operation, dest, keys):
+        keys = [self.appendKeys(key) for key in keys]
+        return self.redis.bitop(operation, dest, keys)
 
-    def renamenx(srcKey, destKey):
-        raise NotImplementedError()
+    def brpoplpush(self, src, dest, timeout=0):
+        src = self.appendKeys(src)
+        dest = self.appendKeys(dest)
+        return self.redis.brpoplpush(src, dest, timeout)
 
-    def bitop(operation, dest, keys):
-        raise NotImplementedError()
-
-    def brpoplpush(src, dst, timeout=0):
-        raise NotImplementedError()
-
-    def dbsize():
+    def dbsize(self):
         raise NotImplementedError()
 
-    def mset(mapping):
-        raise NotImplementedError()
-    
-    def msetnx(mapping):
+    def mset(self, mapping):
+        mapping = {self.appendKeys(key): value for key, value in mapping}
+        return self.redis.mset(mapping)
+
+    def msetnx(self, mapping):
+        mapping = {self.appendKeys(key): value for key, value in mapping}
+        return self.redis.msetnx(mapping)
+
+    def object(self, infotype, key):
+        return self.redis.object(infotype, self.appendKeys(key))
+
+    def pipeline(self, transaction=True):
+        return SubPipeline(self.prefix, self.redis.pipeline)
+
+    def rename(self, srcKey, destKey):
+        srcKey = self.appendKeys(srcKey)
+        destKey = self.appendKeys(destKey)
+        return self.redis.rename(srcKey, destKey)
+
+    def renamenx(self, srcKey, destKey):
+        srcKey = self.appendKeys(srcKey)
+        destKey = self.appendKeys(destKey)
+        return self.redis.renamenx(srcKey, destKey)
+
+    def rpoplpush(self, srcKey, destKey):
+        srcKey = self.appendKeys(srcKey)
+        destKey = self.appendKeys(destKey)
+        return self.redis.rpoplpush(srcKey, destKey)
+
+    def sdiff(self, keys, *args):
+        keys = [self.appendKeys(key) for key in keys]
+        return self.redis.sdiff(keys, *args)
+
+    def sdiffstore(self, dest, keys, *args):
+        dest = self.appendKeys(dest)
+        keys = [self.appendKeys(key) for key in keys]
+        return self.redis.sdiffstore(dest, keys, *args)
+
+    def sinterstore(self, dest, keys, *args):
+        dest = self.appendKeys(dest)
+        keys = [self.appendKeys(key) for key in keys]
+        return self.redis.sinterstore(dest, keys, *args)
+
+    def smove(self, srcKey, destKey, value):
+        srcKey = self.appendKeys(srcKey)
+        destKey = self.appendKeys(destKey)
+        return self.redis.smove(srcKey, destKey, value)
+
+    def sort(name, start=None, num=None, by=None, get=None,
+             desc=False, alpha=False, store=None):
         raise NotImplementedError()
 
-    def object(infotype, key):
+    def sunionstore(self, dest, keys, *args):
+        dest = self.appendKeys(dest)
+        keys = [self.appendKeys(key) for key in keys]
+        return self.redis.sunionstore(dest, keys, *args)
+
+    def transaction(func, watches, **kwargs):
         raise NotImplementedError()
+
+    def watch(self, names):
+        raise NotImplementedError()
+
+    def unwatch(self):
+        raise NotImplementedError()
+
+    def zunionstore(self, dest, keys, aggregate=None):
+        dest = self.appendKeys(dest)
+        keys = [self.appendKeys(key) for key in keys]
+        return self.redis.zunionstore(dest, keys, aggregate)
+
+
+def SubPipeline(SubRedis):
+    def __init__(self, prefix, pipeline):
+        super(SubPipeline, self).__init__(prefix, pipeline)
+        self.pipeline = pipeline
+
+    def execute(self):
+        return self.pipeline.execute()
