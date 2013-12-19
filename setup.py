@@ -6,7 +6,7 @@ redis>=2.7.0"""
 
 setup(
     name="subredis",
-    version="0.0.4",
+    version="0.0.5",
     description="A Redis within your Redis",
     license="Apache",
     author="Doug Turnbull",
@@ -20,7 +20,7 @@ setup(
         "Intended Audience :: Developers",
         "License :: OSI Approved :: Apache Software License",
         "Topic :: Database",
-        "Development Status :: 2 - Pre-Alpha"
+        "Development Status :: 4 - Beta"
     ],
     long_description="""\
 Subredis Redis Keyspace Management
