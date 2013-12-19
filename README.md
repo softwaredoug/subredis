@@ -3,7 +3,7 @@ subredis
 
 SubRedis is a simple keyspace creator for Redis, generating completely isolated redises (redisi?) for the application to use.
 
-Subredis allows creating redis's within an existing redis (or subredis) by prepending a prefix to the key before interacting with redis. As each subredis works entirely in its own keyspace, each owner of a subredis can flushdb, view its own keys, and pretend it exists in a redis-compatible but isolated bubble unaffected by other subredis activity going on in the application.
+Subredis allows creating redis's within an existing redis (or subredis) by prepending a prefix to the key before interacting with redis. As each subredis works entirely in its own keyspace, each owner of a subredis exists in a redis-compatible but isolated bubble unaffected by other subredis activity going on in the application. See [sample usage](##Sample Usage) for examples.
 
 You can read more in [this blog post](http://www.opensourceconnections.com/?p=4800&preview=true).
 
