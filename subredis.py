@@ -188,8 +188,7 @@ class SubRedisMeta(type):
         return type.__new__(cls, clsname, bases, dct)
 
 
-class SubRedis(object):
-    __metaclass__ = SubRedisMeta
+class SubRedis(metaclass=SubRedisMeta):
 
     def __init__(self, prefix, redis):
         self.redis = redis
