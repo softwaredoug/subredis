@@ -1,12 +1,12 @@
 from setuptools import setup
 
 installReq = """
-nose==1.3.0
+nose>=1.3.0
 redis>=2.7.0"""
 
 setup(
     name="subredis",
-    version="0.0.5",
+    version="0.0.6",
     description="A Redis within your Redis",
     license="Apache",
     author="Doug Turnbull",
@@ -15,7 +15,6 @@ setup(
     install_requires=installReq,
     keywords=["redis", "database"],
     classifiers=[
-        "Programming Language :: Python",
         "Programming Language :: Python :: 3",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: Apache Software License",

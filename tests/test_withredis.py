@@ -36,5 +36,5 @@ def test_keys():
     assert "foo" in keys
     assert "baz" in keys
     assert "cats" in keys
-    print repr(keys)
+    print (repr(keys))
     assert len(keys) == 3
