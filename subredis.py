@@ -27,7 +27,6 @@ def keyProxy(fn_name):
         return cls
     return decorator
 
-
 def unsupportedOperation(fn_name, message=''):
     '''Create a method called fn_name in the SubRedis instance.
        This method throws a NotSupportedError when called'''
@@ -120,7 +119,6 @@ def directProxy(fn_name):
 @keyProxy("pexpire")
 @keyProxy("pexpireat")
 @directProxy("ping")
-@directProxy("pipeline")
 @keyProxy("pttl")
 # publish TODO pubsub possible here?
 # pubsub  TODO pubsub possible here?
@@ -228,7 +226,7 @@ class SubRedis():
         return self.redis.object(infotype, self.appendKeys(key))
 
     def pipeline(self, transaction=True):
-        return SubPipeline(self.prefix, self.redis.pipeline)
+        return SubPipeline(self.prefix, self.redis.pipeline())
 
     def rename(self, srcKey, destKey):
         srcKey = self.appendKeys(srcKey)
@@ -288,9 +286,9 @@ class SubRedis():
         return self.redis.zunionstore(dest, keys, aggregate)
 
 
-def SubPipeline(SubRedis):
+class SubPipeline(SubRedis):
     def __init__(self, prefix, pipeline):
-        super(SubPipeline, self).__init__(prefix, pipeline)
+        super().__init__(prefix, pipeline)
         self.pipeline = pipeline
 
     def execute(self):

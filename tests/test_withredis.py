@@ -22,6 +22,7 @@ def test_get_from_pipeline():
     pipeline.get("foo")
     pipeline.get("shaz")
     result = pipeline.execute()
+    result = [x.decode('utf-8') for x in result]
     assert result == ["bar", "snaz"]
     subredis.flushdb()
 
