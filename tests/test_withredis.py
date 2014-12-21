@@ -34,6 +34,7 @@ def test_keys():
     subredis.set("baz", "bar")
     subredis.set("cats", "bar")
     keys = subredis.keys()
+    keys = [x.decode('utf-8') for x in keys]
     assert "foo" in keys
     assert "baz" in keys
     assert "cats" in keys
