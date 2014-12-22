@@ -14,167 +14,175 @@ class NotSupportedError(NotImplementedError):
                "performed (" + self.message + ")"
 
 
-def keyProxy(fn_name):
+def keyProxy(cls, fn_name):
     '''Create a method called fn_name in the SubRedis instance.
        This method appends a prefix to the key passed in,
        and then calls down into the inner redis object'''
-    def decorator(cls):
-        def fn_proxied(self, key, *args, **kwds):
-            fn = getattr(self.redis, fn_name)
-            prefixedKey = self.appendKeys(key)
-            return fn(prefixedKey, *args, **kwds)
-        setattr(cls, fn_name, fn_proxied)
-        return cls
-    return decorator
 
-def unsupportedOperation(fn_name, message=''):
+    def fn_proxied(self, key, *args, **kwds):
+        fn = getattr(self.redis, fn_name)
+        prefixedKey = self.appendKeys(key)
+        return fn(prefixedKey, *args, **kwds)
+    setattr(cls, fn_name, fn_proxied)
+    return cls
+
+
+def unsupportedOperation(cls, fn_name, message=''):
     '''Create a method called fn_name in the SubRedis instance.
        This method throws a NotSupportedError when called'''
-    def decorator(cls):
-        def fn_unsupported(*args, **kwds):
-            raise NotSupportedError(fn_name, message)
-        setattr(cls, fn_name, fn_unsupported)
-        return cls
-    return decorator
+    def fn_unsupported(*args, **kwds):
+        raise NotSupportedError(fn_name, message)
+    setattr(cls, fn_name, fn_unsupported)
+    return cls
 
 
-def directProxy(fn_name):
+def directProxy(cls, fn_name):
     '''Create a method called fn_name in the SubRedis instance.
-       This method is just a redirect into the inner redis object'''
+    This method is just a redirect into the inner redis object'''
+
+    def fn_proxied(self, key, *args, **kwds):
+        fn = getattr(self.redis, fn_name)
+        return fn(*args, **kwds)
+    setattr(cls, fn_name, fn_proxied)
+    return cls
+
+
+def subredis_wrapper():
     def decorator(cls):
-        def fn_proxied(self, key, *args, **kwds):
-            fn = getattr(self.redis, fn_name)
-            return fn(*args, **kwds)
-        setattr(cls, fn_name, fn_proxied)
+        mapping = [
+            ('hget', keyProxy),
+            ('append', keyProxy),
+            # bgrewriteaof not supported for subredis
+            # bgsave not supported for subredis
+            ('bitcount', keyProxy),
+            # bitopt custom impl below
+            ('blpop', keyProxy),
+            ('brpop', keyProxy),
+            # brpoplpush custom impl below
+            ('client_kill', unsupportedOperation),
+            ('client_list', unsupportedOperation),
+            ('client_get', unsupportedOperation),
+            # dbsize TODO
+            ('debug_object', keyProxy),
+            ('decr', keyProxy),
+            ('delete', keyProxy),  # TODO only supports deleting single key
+            ('echo', unsupportedOperation),
+            ('eval', unsupportedOperation),
+            ('evalsha', unsupportedOperation),
+            ('exists', keyProxy),
+            ('expire', keyProxy),
+            ('expireat', keyProxy),
+            # flushall TODO  is possible?
+            # flushdb implemented below
+            # from_url not supported for subredi
+            ('from_url', unsupportedOperation),
+            ('get', keyProxy),
+            ('getbit', keyProxy),
+            ('getrange', keyProxy),
+            ('getset', keyProxy),
+            ('hdel', keyProxy),
+            ('hexists', keyProxy),
+            ('hget', keyProxy),
+            ('hgetall', keyProxy),
+            ('hincrby', keyProxy),
+            ('hincrbyfloat', keyProxy),
+            ('hkeys', keyProxy),
+            ('hlen', keyProxy),
+            ('hmget', keyProxy),
+            ('hmset', keyProxy),
+            ('hset', keyProxy),
+            ('hsetnx', keyProxy),
+            ('hvals', keyProxy),
+            ('incr', keyProxy),
+            ('incrbyfloat', keyProxy),
+            # info TODO -- maybe info that this is a subredis?
+            # keys -- custom implementation below
+            ('lastsave', unsupportedOperation),
+            ('lindex', keyProxy),
+            ('linsert', keyProxy),
+            ('llen', keyProxy),
+            ('lock', keyProxy),
+            ('lpop', keyProxy),
+            ('lpush', keyProxy),
+            ('lpushx', keyProxy),
+            ('lrange', keyProxy),
+            ('lrem', keyProxy),
+            ('lset', keyProxy),
+            ('ltrim', keyProxy),
+            ('mget', keyProxy),
+            ('move', unsupportedOperation),
+            # mset -- custom impl below
+            # msetnx -- custom impl below
+            # object -- custom impl below
+            ('parse_response', unsupportedOperation),
+            ('persist', keyProxy),
+            ('pexpire', keyProxy),
+            ('pexpireat', keyProxy),
+            ('ping', directProxy),
+            ('pttl', keyProxy),
+            # publish TODO pubsub possible here?
+            # pubsub  TODO pubsub possible here?
+            ('randomkey', unsupportedOperation),
+            # register_script UNSUPPORTED
+            # rename custom impl below
+            # renamenx custom impl below
+            ('rpop', keyProxy),
+            # rpoplpush custom impl below
+            ('rpush', keyProxy),
+            ('rpushx', keyProxy),
+            ('sadd', keyProxy),
+            ('scard', keyProxy),
+            # scripting not supported
+            # sdiff -- custom impl below
+            # sdiffstore -- custom impl below
+            ('set', keyProxy),
+            # set_response_callback not supported
+            ('setbit', keyProxy),
+            ('setex', keyProxy),
+            ('setnx', keyProxy),
+            ('setrange', keyProxy),
+            # shutdown not supported
+            ('sinter', keyProxy),
+            # sinterstore custom impl below
+            ('sismember', keyProxy),
+            # slaveof not supported
+            ('smembers', keyProxy),
+            # smove custom impl below
+            # TODO sort -- last key needs to be implemented
+            ('spop', keyProxy),
+            ('srandmember', keyProxy),
+            ('srem', keyProxy),
+            ('substr', keyProxy),
+            ('sunion', keyProxy),
+            # sunionstore -- custom impl below
+            ('time', directProxy),
+            # TODO transaction
+            ('ttl', keyProxy),
+            ('type', keyProxy),
+            # TODO unwatch
+            # TODO watch
+            ('zadd', keyProxy),
+            ('zcard', keyProxy),
+            ('zincrby', keyProxy),
+            ('zinterstore', keyProxy),
+            ('zrange', keyProxy),
+            ('zrangebyscore', keyProxy),
+            ('zrank', keyProxy),
+            ('zrem', keyProxy),
+            ('zremrangebyrank', keyProxy),
+            ('zremrangebyscore', keyProxy),
+            ('zrevrange', keyProxy),
+            ('zrevrangebyscore', keyProxy),
+            ('zrevrank', keyProxy),
+            ('zscore', keyProxy),
+        ]
+        for fn_name, wrapper in mapping:
+            wrapper(cls, fn_name)
         return cls
     return decorator
 
 
-@keyProxy("hget")
-@keyProxy("append")
-# bgrewriteaof not supported for subredis
-# bgsave not supported for subredis
-@keyProxy("bitcount")
-# bitopt custom impl below
-@keyProxy("blpop")
-@keyProxy("brpop")
-# brpoplpush custom impl below
-@unsupportedOperation("client_kill")
-@unsupportedOperation("client_list")
-@unsupportedOperation("client_get")
-# dbsize TODO
-@keyProxy("debug_object")
-@keyProxy("decr")
-@keyProxy("delete")  # TODO only supports deleting single key
-@unsupportedOperation("echo")
-@unsupportedOperation("eval")
-@unsupportedOperation("evalsha")
-@keyProxy("exists")
-@keyProxy("expire")
-@keyProxy("expireat")
-# flushall TODO  is possible?
-# flushdb implemented below
-# from_url not supported for subredi
-@unsupportedOperation("from_url")
-@keyProxy("get")
-@keyProxy("getbit")
-@keyProxy("getrange")
-@keyProxy("getset")
-@keyProxy("hdel")
-@keyProxy("hexists")
-@keyProxy("hget")
-@keyProxy("hgetall")
-@keyProxy("hincrby")
-@keyProxy("hincrbyfloat")
-@keyProxy("hkeys")
-@keyProxy("hlen")
-@keyProxy("hmget")
-@keyProxy("hmset")
-@keyProxy("hset")
-@keyProxy("hsetnx")
-@keyProxy("hvals")
-@keyProxy("incr")
-@keyProxy("incrbyfloat")
-# info TODO -- maybe info that this is a subredis?
-# keys -- custom implementation below
-@unsupportedOperation("lastsave")
-@keyProxy("lindex")
-@keyProxy("linsert")
-@keyProxy("llen")
-@keyProxy("lock")
-@keyProxy("lpop")
-@keyProxy("lpush")
-@keyProxy("lpushx")
-@keyProxy("lrange")
-@keyProxy("lrem")
-@keyProxy("lset")
-@keyProxy("ltrim")
-@keyProxy("mget")
-@unsupportedOperation("move")
-# mset -- custom impl below
-# msetnx -- custom impl below
-# object -- custom impl below
-@unsupportedOperation("parse_response")
-@keyProxy("persist")
-@keyProxy("pexpire")
-@keyProxy("pexpireat")
-@directProxy("ping")
-@keyProxy("pttl")
-# publish TODO pubsub possible here?
-# pubsub  TODO pubsub possible here?
-@unsupportedOperation("randomkey")
-# register_script UNSUPPORTED
-# rename custom impl below
-# renamenx custom impl below
-@keyProxy("rpop")
-# rpoplpush custom impl below
-@keyProxy("rpush")
-@keyProxy("rpushx")
-@keyProxy("sadd")
-@keyProxy("scard")
-# scripting not supported
-# sdiff -- custom impl below
-# sdiffstore -- custom impl below
-@keyProxy("set")
-# set_response_callback not supported
-@keyProxy("setbit")
-@keyProxy("setex")
-@keyProxy("setnx")
-@keyProxy("setrange")
-# shutdown not supported
-@keyProxy("sinter")
-# sinterstore custom impl below
-@keyProxy("sismember")
-# slaveof not supported
-@keyProxy("smembers")
-# smove custom impl below
-# TODO sort -- last key needs to be implemented
-@keyProxy("spop")
-@keyProxy("srandmember")
-@keyProxy("srem")
-@keyProxy("substr")
-@keyProxy("sunion")
-# sunionstore -- custom impl below
-@directProxy("time")
-# TODO transaction
-@keyProxy("ttl")
-@keyProxy("type")
-# TODO unwatch
-# TODO watch
-@keyProxy("zadd")
-@keyProxy("zcard")
-@keyProxy("zincrby")
-@keyProxy("zinterstore")
-@keyProxy("zrange")
-@keyProxy("zrangebyscore")
-@keyProxy("zrank")
-@keyProxy("zrem")
-@keyProxy("zremrangebyrank")
-@keyProxy("zremrangebyscore")
-@keyProxy("zrevrange")
-@keyProxy("zrevrangebyscore")
-@keyProxy("zrevrank")
-@keyProxy("zscore")
+@subredis_wrapper()
 class SubRedis():
 
     def __init__(self, prefix, redis):
@@ -287,6 +295,7 @@ class SubRedis():
 
 
 class SubPipeline(SubRedis):
+
     def __init__(self, prefix, pipeline):
         super().__init__(prefix, pipeline)
         self.pipeline = pipeline
