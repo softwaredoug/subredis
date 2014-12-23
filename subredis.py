@@ -297,7 +297,6 @@ class SubRedis(object):
 class SubPipeline(SubRedis):
 
     def __init__(self, prefix, pipeline):
-        #super().__init__(prefix, pipeline)
         super(SubPipeline, self).__init__(prefix, pipeline)
         self.pipeline = pipeline
 
