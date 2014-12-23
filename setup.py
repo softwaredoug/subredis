@@ -6,7 +6,7 @@ redis>=2.7.0"""
 
 setup(
     name="subredis",
-    version="0.0.6",
+    version="0.1.0",
     description="A Redis within your Redis",
     license="Apache",
     author="Doug Turnbull",
@@ -15,7 +15,8 @@ setup(
     install_requires=installReq,
     keywords=["redis", "database"],
     classifiers=[
-        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.4",
+        'Programming Language :: Python :: 2.7',
         "Intended Audience :: Developers",
         "License :: OSI Approved :: Apache Software License",
         "Topic :: Database",
@@ -41,4 +42,7 @@ implementation,storing the data in keys prefixed by a specified prefix. IE
 
 Most direct uses of redis data structures are supported. Lua scripting and
 many of the administrative methods are not supported.
+
+Project on Github:
+https://github.com/softwaredoug/subredis
 """)
