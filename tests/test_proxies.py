@@ -26,7 +26,7 @@ def test_unsupported_method():
 def test_direct_proxy():
     redis = RedisSpy()
     subredis = SubRedis("prefix", redis)
-    subredis.pipeline("blah", cats="bananas")
-    assert redis.lastCall == "pipeline"
+    subredis.time("blah", cats="bananas")
+    assert redis.lastCall == "time"
     assert redis.lastArgs[0][0] == "blah"
     assert redis.lastKwargs == {"cats": "bananas"}

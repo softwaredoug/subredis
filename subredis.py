@@ -127,7 +127,6 @@ class SubRedisMeta(type):
         keyProxy("pexpire", dct)
         keyProxy("pexpireat", dct)
         directProxy("ping", dct)
-        directProxy("pipeline", dct)
         keyProxy("pttl", dct)
         # publish TODO pubsub possible here?
         # pubsub  TODO pubsub possible here?
@@ -240,7 +239,7 @@ class SubRedis(object):
         return self.redis.object(infotype, self.appendKeys(key))
 
     def pipeline(self, transaction=True):
-        return SubPipeline(self.prefix, self.redis.pipeline)
+        return SubPipeline(self.prefix, self.redis.pipeline())
 
     def rename(self, srcKey, destKey):
         srcKey = self.appendKeys(srcKey)
@@ -300,7 +299,7 @@ class SubRedis(object):
         return self.redis.zunionstore(dest, keys, aggregate)
 
 
-def SubPipeline(SubRedis):
+class SubPipeline(SubRedis):
     def __init__(self, prefix, pipeline):
         super(SubPipeline, self).__init__(prefix, pipeline)
         self.pipeline = pipeline
