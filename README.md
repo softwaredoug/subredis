@@ -1,6 +1,8 @@
 subredis
 ========
 
+[![Build Status](https://travis-ci.org/softwaredoug/subredis.svg?branch=master)](https://travis-ci.org/softwaredoug/subredis)
+
 SubRedis is a simple namespace wrapper for Redis, generating completely sandboxed redises to enhance application safety and modularity.
 
 Subredis allows creating redis's within an existing redis (or subredis) by prepending a prefix to the key before interacting with redis. Each subredis exists in a redis-compatible but isolated bubble unaffected by other subredis activity going on in the application. See [sample usage](##Sample Usage) for examples.
