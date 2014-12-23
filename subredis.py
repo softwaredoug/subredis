@@ -183,7 +183,7 @@ def subredis_wrapper():
 
 
 @subredis_wrapper()
-class SubRedis():
+class SubRedis(object):
 
     def __init__(self, prefix, redis):
         self.redis = redis
@@ -297,7 +297,8 @@ class SubRedis():
 class SubPipeline(SubRedis):
 
     def __init__(self, prefix, pipeline):
-        super().__init__(prefix, pipeline)
+        #super().__init__(prefix, pipeline)
+        super(SubPipeline, self).__init__(prefix, pipeline)
         self.pipeline = pipeline
 
     def execute(self):
