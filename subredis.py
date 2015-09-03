@@ -185,9 +185,10 @@ def subredis_wrapper():
 @subredis_wrapper()
 class SubRedis(object):
 
-    def __init__(self, prefix, redis):
+    def __init__(self, prefix, redis, separator='_'):
         self.redis = redis
         self.prefix = prefix
+        self.separator = separator
 
     def appendKeys(self, key):
         prefixedKey = key
