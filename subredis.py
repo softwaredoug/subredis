@@ -193,7 +193,7 @@ class SubRedis(object):
     def appendKeys(self, key):
         prefixedKey = key
         if self.prefix:
-            prefixedKey = self.prefix + "_" + key
+            prefixedKey = self.prefix + self.separator + key
         return prefixedKey
 
     def flushdb(self):
