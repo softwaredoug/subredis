@@ -12,6 +12,8 @@ class RedisSpy(object):
     """ Report on how "redis" is being called
         in testing"""
     def __init__(self):
+        self.addSpy("__getitem__")
+        self.addSpy("__setitem__")
         self.addSpy("append")
         self.addSpy("bitcount")
         self.addSpy("blpop")
