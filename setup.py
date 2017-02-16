@@ -6,7 +6,7 @@ redis>=2.7.0"""
 
 setup(
     name="subredis",
-    version="0.1.0",
+    version="0.1.1",
     description="A Redis within your Redis",
     license="Apache",
     author="Doug Turnbull",
