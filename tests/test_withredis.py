@@ -40,3 +40,14 @@ def test_keys():
     assert "cats" in keys
     print (repr(keys))
     assert len(keys) == 3
+
+
+def test_set_get():
+    subredis = SubRedis("prefix", r)
+    r.set("unrelated", "unrelated")
+    subredis.set("foo", "bar")
+    subredis["baz"] = "snaz"
+    assert subredis["foo"] == b"bar"
+    assert subredis.get("foo") == b"bar"
+    assert subredis["baz"] == b"snaz"
+    assert subredis.get("baz") == b"snaz"

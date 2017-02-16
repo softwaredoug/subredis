@@ -50,6 +50,8 @@ def directProxy(cls, fn_name):
 def subredis_wrapper():
     def decorator(cls):
         mapping = [
+            ('__getitem__', keyProxy),
+            ('__setitem__', keyProxy),
             ('hget', keyProxy),
             ('append', keyProxy),
             # bgrewriteaof not supported for subredis
