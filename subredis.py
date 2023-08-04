@@ -64,6 +64,8 @@ def subredis_wrapper():
             ('client_kill', unsupportedOperation),
             ('client_list', unsupportedOperation),
             ('client_get', unsupportedOperation),
+            ('connection', directProxy),
+            ('connection_pool', directProxy),
             # dbsize TODO
             ('debug_object', keyProxy),
             ('decr', keyProxy),
@@ -187,14 +189,15 @@ def subredis_wrapper():
 @subredis_wrapper()
 class SubRedis(object):
 
-    def __init__(self, prefix, redis):
+    def __init__(self, prefix, redis, separator="_"):
         self.redis = redis
         self.prefix = prefix
+        self.separator = separator
 
     def appendKeys(self, key):
         prefixedKey = key
         if self.prefix:
-            prefixedKey = self.prefix + "_" + key
+            prefixedKey = self.prefix + self.separator + key
         return prefixedKey
 
     def flushdb(self):
