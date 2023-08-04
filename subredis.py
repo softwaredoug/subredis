@@ -64,6 +64,8 @@ def subredis_wrapper():
             ('client_kill', unsupportedOperation),
             ('client_list', unsupportedOperation),
             ('client_get', unsupportedOperation),
+            ('connection', directProxy),
+            ('connection_pool', directProxy),
             # dbsize TODO
             ('debug_object', keyProxy),
             ('decr', keyProxy),
